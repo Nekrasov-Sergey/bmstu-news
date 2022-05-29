@@ -14,6 +14,13 @@ import (
 type Config struct {
 	ServiceHost string
 	ServicePort int
+
+	BMSTUNewsConfig BMSTUNewsConfig
+}
+
+type BMSTUNewsConfig struct {
+	SiteAddress string
+	Protocol    string
 }
 
 // NewConfig Создаёт новый объект конфигурации, загружая данные из файла конфигурации

@@ -41,7 +41,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	err = application.Run()
+	err = application.Run(ctx)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("can`t run application")
 

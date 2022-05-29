@@ -1,4 +1,10 @@
+#Конфиг как .toml (аналогия с dist env)
 #Хост и порт приложения
 
 ServiceHost = "0.0.0.0"
 ServicePort = 80
+
+#Ответвление
+[BMSTUNewsConfig]
+SiteAddress = "api.www.bmstu.ru"
+Protocol = "https"
