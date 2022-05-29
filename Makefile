@@ -13,3 +13,7 @@ build:
 .PHONY: test
 test:
 	go test $(PWD)/... -coverprofile=cover.out
+
+.PHONY: local
+local:
+	cp .dist.env .env
