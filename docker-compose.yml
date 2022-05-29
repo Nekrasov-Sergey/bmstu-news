@@ -1,0 +1,19 @@
+version: "3.4"
+services:
+  db:
+    image: postgres
+    hostname: db
+    volumes:
+      - type: volume
+        source: postgresdb-data
+        target: /var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_DB: link-cut
+      POSTGRES_PASSWORD: pass
+
+volumes:
+  postgresdb-data:
+    driver: local
