@@ -9,7 +9,7 @@ type FullNewsItems struct {
 	Slug        string        `json:"slug"`         //Slug новости (переход)
 	Title       string        `json:"title"`        //Название новости
 	Author      string        `json:"author"`       //Автор новости - оставили одно поле из структуры
-	PreviewText string        `json:"preview_text"` //Иногда совпадает с Title, иногда с Content, есть малые отличия
+	PreviewText string        `json:"preview_text"` //Иногд а совпадает с Title, иногда с Content, есть малые отличия
 	Content     string        `json:"content"`      //Полный текст новости
 	ReadingTime string        `json:"reading_time"` //Время прочтения
 	PublishedAt PublishedAt   `json:"published_at"` //Дата публикации
