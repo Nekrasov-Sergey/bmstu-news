@@ -15,7 +15,7 @@ func New(ctx context.Context) (*App, error) {
 
 func (a *App) Run(ctx context.Context) error {
 	c := news.New(ctx)
-	c.GetNews("")
+	c.GetNews()
 
 	return nil
 }

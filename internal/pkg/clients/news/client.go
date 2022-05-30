@@ -1,9 +1,12 @@
 package news
 
 import (
+	"bytes"
 	"context"
-	"fmt"
+	"encoding/json"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/config"
+	log "github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -12,22 +15,22 @@ const getNewsPath = "/news"
 
 type Client struct {
 	ctx        context.Context
-	httpclient *http.Client
+	httpClient *http.Client
 }
 
 func New(ctx context.Context) *Client {
 	return &Client{
 		ctx:        ctx,
-		httpclient: http.DefaultClient,
+		httpClient: http.DefaultClient,
 	}
 }
 
 // WithTransport Для прокси сервера
 func (c *Client) WithTransport(transport *http.Transport) {
-	c.httpclient.Transport = transport
+	c.httpClient.Transport = transport
 }
 
-func (c *Client) GetNews(req RequestGetNews) (*RequestGetNews, error) {
+func (c *Client) GetNews() (*ResponseNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
 
 	url := url.URL{
@@ -36,10 +39,29 @@ func (c *Client) GetNews(req RequestGetNews) (*RequestGetNews, error) {
 		Path:   getNewsPath, //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
 	}
 
-	fmt.Println(url.String())
+	log.Info("generated url ", url.String())
 
-	/*req := http.NewRequest(http.MethodGet)
-	c.httpclient.Do()*/
+	reqToBMSTU, err := http.NewRequest(http.MethodGet, url.String(), bytes.NewBuffer([]byte("")))
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	r, err := c.httpClient.Do(reqToBMSTU)
+	if err != nil {
+		return nil, err
+	}
+
+	bts, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ResponseNews
+
+	err = json.Unmarshal(bts, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
 }

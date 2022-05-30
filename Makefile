@@ -6,6 +6,10 @@ NAME = bmstu-news-parser
 run:
 	go run $(PWD)/cmd/$(NAME)/
 
+.PHONY: first
+first:
+	go run $(PWD)/cmd/first-parse
+
 .PHONY: build
 build:
 	go build -o bin/$(NAME) $(PWD)/cmd/$(NAME)
