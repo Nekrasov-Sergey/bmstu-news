@@ -1,0 +1,10 @@
+#На серверах для тестов
+
+#Хост и порт приложения
+
+ServiceHost = "0.0.0.0"
+ServicePort = 80
+
+[BMSTUNewsConfig]
+SiteAddress = "api.www.bmstu.ru"
+Protocol = "https"
