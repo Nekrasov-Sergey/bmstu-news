@@ -19,7 +19,7 @@ type ResponseFullNews struct {
 	Image       string        `json:"image"`       //Первая картинка новости
 	Views       int           `json:"views"`       //Бесполезно
 	PhotoReport []interface{} `json:"photoReport"` //Несколько фотографий для пролистывания
-	Documents   []interface{} `json:"documents"`   //?? todo: найти новость, где documents не пустой
+	Documents   []interface{} `json:"documents"`   //Не нашел новость, где не пустой
 	SimilarNews []struct {    //Похожие новости
 		Slug        string   `json:"slug"`         //Slug новости
 		Title       string   `json:"title"`        //Название

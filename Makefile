@@ -21,3 +21,8 @@ test:
 .PHONY: local
 local:
 	cp .dist.env .env
+
+# Запустить миграции
+.PHONY: migrate
+migrate:
+	go run $(PWD)/cmd/migrate
