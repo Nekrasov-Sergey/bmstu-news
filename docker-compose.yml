@@ -11,7 +11,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: user
-      POSTGRES_DB: link-cut
+      POSTGRES_DB: bmstu-news
       POSTGRES_PASSWORD: pass
 
 volumes:

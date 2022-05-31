@@ -1,40 +1,24 @@
 package news
 
-type News struct {
-	Slug   string `json:"slug"`
-	Title  string `json:"title"`
-	Author struct {
-		OfferFrom interface{} `json:"offer_from"`
-		Union     interface{} `json:"union"`
-		Author    string      `json:"author"`
-	} `json:"author"`
-	PreviewText string `json:"preview_text"`
-	Content     string `json:"content"`
-	ReadingTime string `json:"reading_time"`
-	PublishedAt struct {
-		Day   string `json:"day"`
-		Month string `json:"month"`
-		Year  string `json:"year"`
-	} `json:"published_at"`
-	Image       string        `json:"image"`
-	Views       int           `json:"views"`
-	PhotoReport []interface{} `json:"photoReport"`
-	Documents   []interface{} `json:"documents"`
-	SimilarNews []struct {
-		Slug        string `json:"slug"`
-		Title       string `json:"title"`
-		PreviewText string `json:"preview_text"`
-		PublishedAt struct {
+type ResponseNews struct {
+	Total  int        `json:"total"`  //Новостей всего
+	Limit  int        `json:"limit"`  //Сколько новостей выдано
+	Offset int        `json:"offset"` //Смещение по новостям
+	Items  []struct { //Слайс кратких данных по новостям
+		Slug        string   `json:"slug"`         //Нужен для перехода к полной новости
+		Title       string   `json:"title"`        //Назавание новости
+		PreviewText string   `json:"preview_text"` //Не показывается
+		PublishedAt struct { //Дата публикации
 			Day   string `json:"day"`
 			Month string `json:"month"`
 			Year  string `json:"year"`
 		} `json:"published_at"`
-		ImagePreview string `json:"imagePreview"`
-		Tags         []struct {
-			Id    int    `json:"id"`
-			Slug  string `json:"slug"`
-			Title string `json:"title"`
-			Color string `json:"color"`
+		ImagePreview string     `json:"imagePreview"` //Превью картинка
+		Tags         []struct { //Тэги для фильтрации
+			Id    int    `json:"id"`    //ID тэга
+			Slug  string `json:"slug"`  //Slug тэга, оставим
+			Title string `json:"title"` //Название тэга
+			Color string `json:"color"` //Цвет тэга
 		} `json:"tags"`
-	} `json:"similar_news"`
+	} `json:"items"`
 }

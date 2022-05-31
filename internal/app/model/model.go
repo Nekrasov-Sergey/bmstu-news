@@ -1,63 +1,47 @@
 package model
 
-type News struct {
-	Slug   string `json:"slug"`
-	Title  string `json:"title"`
-	Author struct {
-		OfferFrom interface{} `json:"offer_from"`
-		Union     interface{} `json:"union"`
-		Author    string      `json:"author"`
-	} `json:"author"`
-	PreviewText string `json:"preview_text"`
-	Content     string `json:"content"`
-	ReadingTime string `json:"reading_time"`
-	PublishedAt struct {
-		Day   string `json:"day"`
-		Month string `json:"month"`
-		Year  string `json:"year"`
-	} `json:"published_at"`
-	Image       string        `json:"image"`
-	Views       int           `json:"views"`
-	PhotoReport []interface{} `json:"photoReport"`
-	Documents   []interface{} `json:"documents"`
-	SimilarNews []struct {
-		Slug        string `json:"slug"`
-		Title       string `json:"title"`
-		PreviewText string `json:"preview_text"`
-		PublishedAt struct {
-			Day   string `json:"day"`
-			Month string `json:"month"`
-			Year  string `json:"year"`
-		} `json:"published_at"`
-		ImagePreview string `json:"imagePreview"`
-		Tags         []struct {
-			Id    int    `json:"id"`
-			Slug  string `json:"slug"`
-			Title string `json:"title"`
-			Color string `json:"color"`
-		} `json:"tags"`
-	} `json:"similar_news"`
+type DBNews struct {
+	Slug             string   `json:"slug"`               //Slug новости (переход)
+	Title            string   `json:"title"`              //Название новости
+	Author           string   `json:"author"`             //Автор новости - оставили одно поле из структуры
+	PreviewText      string   `json:"preview_text"`       //Иногд а совпадает с Title, иногда с Content, есть малые отличия
+	Content          string   `json:"content"`            //Полный текст новости
+	ReadingTime      string   `json:"reading_time"`       //Время прочтения
+	PublishedAtDay   int      `json:"published_at_day"`   //Дата публикации
+	PublishedAtMonth string   `json:"published_at_month"` //Дата публикации
+	PublishedAtYear  int      `json:"published_at_year"`  //Дата публикации
+	Image            string   `json:"image"`              //Первая картинка новости
+	PhotoReport      []string `gorm:"type:text[]"`        //Несколько фотографий для пролистывания
+	SimilarNewsSlug  []string `gorm:"type:text[]"`        //Похожие новости
+	TagsTitle        []string `gorm:"type:text[]"`        //Тэги для фильтрации
 }
 
-type NewsMenu struct {
-	Total  int `json:"total"`
-	Limit  int `json:"limit"`
-	Offset int `json:"offset"`
-	Items  []struct {
-		Slug        string `json:"slug"`
-		Title       string `json:"title"`
-		PreviewText string `json:"preview_text"`
-		PublishedAt struct {
-			Day   string `json:"day"`
-			Month string `json:"month"`
-			Year  string `json:"year"`
-		} `json:"published_at"`
-		ImagePreview string `json:"imagePreview"`
-		Tags         []struct {
-			Id    int    `json:"id"`
-			Slug  string `json:"slug"`
-			Title string `json:"title"`
-			Color string `json:"color"`
-		} `json:"tags"`
-	} `json:"items"`
+type FullNewsItems struct {
+	Slug             string   `json:"slug"`               //Slug новости (переход)
+	Title            string   `json:"title"`              //Название новости
+	Author           string   `json:"author"`             //Автор новости - оставили одно поле из структуры
+	PreviewText      string   `json:"preview_text"`       //Иногд а совпадает с Title, иногда с Content, есть малые отличия
+	Content          string   `json:"content"`            //Полный текст новости
+	ReadingTime      string   `json:"reading_time"`       //Время прочтения
+	PublishedAtDay   int      `json:"published_at_day"`   //Дата публикации
+	PublishedAtMonth string   `json:"published_at_month"` //Дата публикации
+	PublishedAtYear  int      `json:"published_at_year"`  //Дата публикации
+	Image            string   `json:"image"`              //Первая картинка новости
+	PhotoReport      []string `json:"photoReport"`        //Несколько фотографий для пролистывания
+	SimilarNewsSlug  []string `json:"similar_news_slug"`  //Похожие новости
 }
+
+//NewsItems - краткая новость
+type NewsItems struct {
+	Slug             string   `json:"slug"`               //Нужен для перехода к полной новости
+	Title            string   `json:"title"`              //Назавание новости
+	PreviewText      string   `json:"preview_text"`       //Не показывается
+	PublishedAtDay   int      `json:"published_at_day"`   //Дата публикации
+	PublishedAtMonth string   `json:"published_at_month"` //Дата публикации
+	PublishedAtYear  int      `json:"published_at_year"`  //Дата публикации
+	ImagePreview     string   `json:"imagePreview"`       //Превью картинка
+	TagsTitle        []string `json:"tags_title"`         //Тэги для фильтрации
+}
+
+//общая структура из двух - хранится в базе данных
+//посмотреть на видео - физически через gorm
