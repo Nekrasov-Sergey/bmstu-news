@@ -79,7 +79,8 @@ func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNew
 
 	return FullNewsItems, nil
 }
-func (s *Service) WriteDBNews(ctx context.Context, NewsItems []model.NewsItems, FullNewsItems model.FullNewsItems) error {
+func (s *Service) WriteDBNews(ctx context.Context, NewsItems model.NewsItems, FullNewsItems model.FullNewsItems) error {
+	//сделать тут соединение двух структур в DBNews и отправить эту структуру в repo.RewriteWorkingOutItems(ctx context.Context, items []model.DBNews)
 	return nil
 }
 func (s *Service) ReadDBNews(ctx context.Context, date time.Time) []model.DBNews {

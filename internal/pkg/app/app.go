@@ -12,7 +12,7 @@ import (
 type IService interface {
 	ParseNews(ctx context.Context, limit string, offset string) ([]model.NewsItems, error)
 	ParseFullNews(ctx context.Context, slug string) (model.FullNewsItems, error)
-	WriteDBNews(ctx context.Context, NewsItems []model.NewsItems, FullNewsItems model.FullNewsItems) error
+	WriteDBNews(ctx context.Context, NewsItems model.NewsItems, FullNewsItems model.FullNewsItems) error
 	ReadDBNews(ctx context.Context, date time.Time) []model.DBNews
 }
 
@@ -59,9 +59,8 @@ func (a *App) Run(ctx context.Context) error {
 			if err != nil {
 				log.WithError(err).Error("Can`t parse full news")
 			}
+			err = a.service.WriteDBNews(ctx, news, FullNewsItems)
 		}
-
-		err = a.service.WriteDBNews(ctx, NewsItems, FullNewsItems)
 
 		time.Sleep(newsCfg.CronTimeout)
 	}
