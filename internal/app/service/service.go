@@ -24,7 +24,7 @@ func New(ctx context.Context) (*Service, error) {
 func (s *Service) ParseNews(ctx context.Context, limit string, offset string) ([]model.NewsItems, error) {
 	resp, err := s.newsClient.GetNews(limit, offset)
 	if err != nil {
-		log.WithContext(ctx).WithError(err).Error("Can`t parse full news")
+		log.WithContext(ctx).WithError(err).Error("Can`t parse news")
 		return nil, err
 	}
 
@@ -49,10 +49,37 @@ func (s *Service) ParseNews(ctx context.Context, limit string, offset string) ([
 
 	return NewsItems, nil
 }
-func (s *Service) ParseFullNews(ctx context.Context, slug string) ([]model.FullNewsItems, error) {
-	return nil, nil
+func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNewsItems, error) {
+	resp, err := s.newsClient.GetFullNews(slug)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("Can`t parse full news")
+		return model.FullNewsItems{}, err
+	}
+
+	FullNewsItems := model.FullNewsItems{}
+
+	FullNewsItems.Slug = resp.Slug
+	FullNewsItems.Title = resp.Title
+	FullNewsItems.Author = resp.Author.Author
+	FullNewsItems.PreviewText = resp.PreviewText
+	FullNewsItems.Content = resp.Content
+	FullNewsItems.ReadingTime = resp.ReadingTime
+	FullNewsItems.PublishedAtDay, _ = strconv.Atoi(resp.PublishedAt.Day)
+	FullNewsItems.PublishedAtMonth = resp.PublishedAt.Month
+	FullNewsItems.PublishedAtYear, _ = strconv.Atoi(resp.PublishedAt.Year)
+	FullNewsItems.Image = resp.Image
+
+	for _, photo := range resp.PhotoReport {
+		FullNewsItems.PhotoReport = append(FullNewsItems.PhotoReport, photo.(string))
+	}
+
+	for _, similarNewsSlug := range resp.PhotoReport {
+		FullNewsItems.SimilarNewsSlug = append(FullNewsItems.SimilarNewsSlug, similarNewsSlug.(string))
+	}
+
+	return FullNewsItems, nil
 }
-func (s *Service) WriteDBNews(ctx context.Context, NewsItems []model.NewsItems, FullNewsItems []model.FullNewsItems) error {
+func (s *Service) WriteDBNews(ctx context.Context, NewsItems []model.NewsItems, FullNewsItems model.FullNewsItems) error {
 	return nil
 }
 func (s *Service) ReadDBNews(ctx context.Context, date time.Time) []model.DBNews {

@@ -67,3 +67,40 @@ func (c *Client) GetNews(limit string, offset string) (*ResponseNews, error) {
 
 	return &resp, nil
 }
+
+func (c *Client) GetFullNews(slug string) (*ResponseFullNews, error) {
+	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
+
+	url := url.URL{
+		Scheme:   cfg.Protocol,
+		Host:     cfg.SiteAddress,
+		Path:     getNewsPath,
+		RawQuery: slug,
+	}
+
+	log.Info("generated url ", url.String())
+
+	reqToBMSTU, err := http.NewRequest(http.MethodGet, url.String(), bytes.NewBuffer([]byte("")))
+	if err != nil {
+		return nil, err
+	}
+
+	r, err := c.httpClient.Do(reqToBMSTU)
+	if err != nil {
+		return nil, err
+	}
+
+	bts, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp ResponseFullNews
+
+	err = json.Unmarshal(bts, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp, nil
+}

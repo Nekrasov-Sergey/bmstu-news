@@ -27,7 +27,6 @@ type FullNewsItems struct {
 	PublishedAtMonth string   `json:"published_at_month"` //Дата публикации
 	PublishedAtYear  int      `json:"published_at_year"`  //Дата публикации
 	Image            string   `json:"image"`              //Первая картинка новости
-	Views            int      `json:"views"`              //Бесполезно
 	PhotoReport      []string `json:"photoReport"`        //Несколько фотографий для пролистывания
 	SimilarNewsSlug  []string `json:"similar_news_slug"`  //Похожие новости
 }
