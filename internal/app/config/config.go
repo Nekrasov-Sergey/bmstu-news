@@ -6,6 +6,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+	"time"
 )
 
 // Config Структура конфигурации;
@@ -21,6 +22,7 @@ type Config struct {
 type BMSTUNewsConfig struct {
 	SiteAddress string
 	Protocol    string
+	CronTimeout time.Duration
 }
 
 // NewConfig Создаёт новый объект конфигурации, загружая данные из файла конфигурации

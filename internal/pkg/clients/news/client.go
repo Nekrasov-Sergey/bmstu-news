@@ -30,13 +30,15 @@ func (c *Client) WithTransport(transport *http.Transport) {
 	c.httpClient.Transport = transport
 }
 
-func (c *Client) GetNews() (*ResponseNews, error) {
+func (c *Client) GetNews(limit string, offset string) (*ResponseNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
-
+	var urlLimit string = "?&limit="
+	var urlOffset string = "&offset="
 	url := url.URL{
-		Scheme: cfg.Protocol,
-		Host:   cfg.SiteAddress,
-		Path:   getNewsPath, //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
+		Scheme:   cfg.Protocol,
+		Host:     cfg.SiteAddress,
+		Path:     getNewsPath,
+		RawQuery: urlLimit + limit + urlOffset + offset, //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
 	}
 
 	log.Info("generated url ", url.String())
