@@ -2,13 +2,14 @@ package repository
 
 import (
 	"context"
-	"strconv"
+	"errors"
 
-	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/dsn"
-	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/model"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/dsn"
+	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/model"
 )
 
 type Repository struct {
@@ -32,22 +33,32 @@ func New(ctx context.Context) (*Repository, error) {
 	}, nil
 }
 
-func (r *Repository) RewriteDBNews(ctx context.Context, DBitems model.DBNews) error {
+func (r *Repository) RewriteDBNews(ctx context.Context, newsItem model.News) error {
 	var err error
 
-	year, month, d := DBitems.PublishedAt.Date()
+	selectedNewsItem := model.News{}
 
-	sqlDate := strconv.Itoa(year) + "-" + strconv.Itoa(int(month)) + "-" + strconv.Itoa(d)
+	err = r.db.
+		Where("slug = ?", newsItem.Slug).
+		First(&selectedNewsItem).
+		Error
 
-	err = r.db.Where("published_at = ?", sqlDate).Delete(&DBitems).Error
-	if err != nil {
-		log.WithError(err).Error("cant delete news")
-
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		err := r.db.Create(&newsItem).Error
+		if err != nil {
+			return err
+		}
 	}
 
-	err = r.db.Create(&DBitems).Error
+	// todo: проверять идентично ли и перезаписывать только если есть различия или делать UPDATE
+	err = r.db.Where("slug = ?", newsItem.Slug).Delete(&selectedNewsItem).Error
 	if err != nil {
-		log.WithError(err).Error("cant create item")
+		return err
+	}
+
+	err = r.db.Create(&newsItem).Error
+	if err != nil {
+		return err
 	}
 
 	return nil

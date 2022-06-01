@@ -2,13 +2,31 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/model"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/repository"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/pkg/clients/news"
-	log "github.com/sirupsen/logrus"
-	"strconv"
-	"time"
 )
+
+var monthFormat = map[string]time.Month{
+	"января":   time.January,
+	"февраля":  time.February,
+	"марта":    time.March,
+	"апреля":   time.April,
+	"мая":      time.May,
+	"июня":     time.June,
+	"июля":     time.July,
+	"августа":  time.August,
+	"сентября": time.September,
+	"октября":  time.October,
+	"ноября":   time.November,
+	"декабря":  time.December,
+}
 
 type Service struct {
 	newsClient *news.Client
@@ -28,7 +46,32 @@ func New(ctx context.Context) (*Service, error) {
 	}, nil
 }
 
-func (s *Service) ParseNews(ctx context.Context, limit string, offset string) ([]model.NewsItems, error) {
+func (s *Service) JoinNewsInfo(ctx context.Context,
+	shortNewsItem model.NewsItems,
+	fullNewsItem model.FullNewsItem) model.News {
+
+	DBItem := model.News{}
+
+	DBItem.Slug = fullNewsItem.Slug
+	DBItem.Title = fullNewsItem.Title
+	DBItem.Author = fullNewsItem.Author
+	DBItem.PreviewText = fullNewsItem.PreviewText
+	DBItem.Content = fullNewsItem.Content
+	DBItem.ReadingTime = fullNewsItem.ReadingTime
+	DBItem.PublishedAt = fullNewsItem.PublishedAt
+	DBItem.Image = fullNewsItem.Image
+
+	DBItem.SimilarNewsSlug = make([]string, len(fullNewsItem.SimilarNewsSlug))
+	DBItem.PhotoReport = make([]string, len(fullNewsItem.PhotoReport))
+	DBItem.TagsTitle = make([]string, len(shortNewsItem.TagsTitle))
+
+	copy(DBItem.TagsTitle, shortNewsItem.TagsTitle)
+	copy(DBItem.PhotoReport, fullNewsItem.PhotoReport)
+	copy(DBItem.SimilarNewsSlug, fullNewsItem.SimilarNewsSlug)
+
+	return DBItem
+}
+func (s *Service) ParseShortNews(ctx context.Context, limit int, offset int) ([]model.NewsItems, error) {
 	resp, err := s.newsClient.GetNews(limit, offset)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Can`t parse news")
@@ -42,9 +85,6 @@ func (s *Service) ParseNews(ctx context.Context, limit string, offset string) ([
 		item.Slug = elem.Slug
 		item.Title = elem.Title
 		item.PreviewText = elem.PreviewText
-		/*item.PublishedAtDay, _ = strconv.Atoi(elem.PublishedAt.Day)
-		item.PublishedAtMonth = elem.PublishedAt.Month
-		item.PublishedAtYear, _ = strconv.Atoi(elem.PublishedAt.Year)*/
 		item.PublishedAt, err = s.tryParseTime(elem.PublishedAt.Day, elem.PublishedAt.Month, elem.PublishedAt.Year)
 		item.ImagePreview = elem.ImagePreview
 
@@ -57,14 +97,14 @@ func (s *Service) ParseNews(ctx context.Context, limit string, offset string) ([
 
 	return NewsItems, nil
 }
-func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNewsItems, error) {
+func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNewsItem, error) {
 	resp, err := s.newsClient.GetFullNews(slug)
 	if err != nil {
 		log.WithContext(ctx).WithError(err).Error("Can`t parse full news")
-		return model.FullNewsItems{}, err
+		return model.FullNewsItem{}, err
 	}
 
-	FullNewsItems := model.FullNewsItems{}
+	FullNewsItems := model.FullNewsItem{}
 
 	FullNewsItems.Slug = resp.Slug
 	FullNewsItems.Title = resp.Title
@@ -73,9 +113,6 @@ func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNew
 	FullNewsItems.Content = resp.Content
 	FullNewsItems.ReadingTime = resp.ReadingTime
 	FullNewsItems.PublishedAt, err = s.tryParseTime(resp.PublishedAt.Day, resp.PublishedAt.Month, resp.PublishedAt.Year)
-	/*FullNewsItems.PublishedAtDay, _ = strconv.Atoi(resp.PublishedAt.Day)
-	FullNewsItems.PublishedAtMonth = resp.PublishedAt.Month
-	FullNewsItems.PublishedAtYear, _ = strconv.Atoi(resp.PublishedAt.Year)*/
 	FullNewsItems.Image = resp.Image
 
 	for _, photo := range resp.PhotoReport {
@@ -88,85 +125,28 @@ func (s *Service) ParseFullNews(ctx context.Context, slug string) (model.FullNew
 
 	return FullNewsItems, nil
 }
-func (s *Service) WriteDBNews(ctx context.Context, NewsItems model.NewsItems, FullNewsItems model.FullNewsItems) error {
-	//сделать тут соединение двух структур в DBNews и отправить эту структуру в repo.RewriteDBNews(ctx context.Context, DBitems model.DBNews)
-
-	DBItems := model.DBNews{}
-
-	DBItems.Slug = FullNewsItems.Slug
-	DBItems.Title = FullNewsItems.Title
-	DBItems.Author = FullNewsItems.Author
-	DBItems.PreviewText = FullNewsItems.PreviewText
-	DBItems.Content = FullNewsItems.Content
-	DBItems.ReadingTime = FullNewsItems.ReadingTime
-	DBItems.PublishedAt = FullNewsItems.PublishedAt
-	DBItems.Image = FullNewsItems.Image
-
-	/*for _, tag := range NewsItems.TagsTitle {
-		DBItems.TagsTitle = append(DBItems.TagsTitle, tag)
-	}
-
-	for _, photo := range FullNewsItems.PhotoReport {
-		DBItems.PhotoReport = append(DBItems.PhotoReport, photo)
-	}
-
-	for _, similarNewsSlug := range FullNewsItems.PhotoReport {
-		DBItems.SimilarNewsSlug = append(DBItems.SimilarNewsSlug, similarNewsSlug)
-	}*/
-
-	return s.repo.RewriteDBNews(ctx, DBItems)
+func (s *Service) WriteDBNews(ctx context.Context, newsItem model.News) error {
+	return s.repo.RewriteDBNews(ctx, newsItem)
 }
-func (s *Service) ReadDBNews(ctx context.Context, date time.Time) []model.DBNews {
+func (s *Service) ReadDBNews(ctx context.Context, date time.Time) []model.News {
 	return nil
 }
 
 func (s *Service) tryParseTime(d string, m string, y string) (time.Time, error) {
-
-	//year, _ := strconv.Atoi(y)
-	day, _ := strconv.Atoi(d)
-
-	/*monthFormat := map[string]time.Time{
-		"января":   time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC),
-		"февраля":  time.Date(2022, 2, 1, 0, 0, 0, 0, time.UTC),
-		"марта":    time.Date(2022, 3, 1, 0, 0, 0, 0, time.UTC),
-		"апреля":   time.Date(2022, 4, 1, 0, 0, 0, 0, time.UTC),
-		"мая":      time.Date(2022, 5, 1, 0, 0, 0, 0, time.UTC),
-		"июня":     time.Date(2022, 6, 1, 0, 0, 0, 0, time.UTC),
-		"июля":     time.Date(2022, 7, 1, 0, 0, 0, 0, time.UTC),
-		"августа":  time.Date(2022, 8, 1, 0, 0, 0, 0, time.UTC),
-		"сентября": time.Date(2022, 9, 1, 0, 0, 0, 0, time.UTC),
-		"октября":  time.Date(2022, 10, 1, 0, 0, 0, 0, time.UTC),
-		"ноября":   time.Date(2022, 11, 1, 0, 0, 0, 0, time.UTC),
-		"декабря":  time.Date(2022, 12, 1, 0, 0, 0, 0, time.UTC),
-	}*/
-
-	if day < 10 {
-		d = "0" + d
-	}
-
-	//date := time.Date(year, monthFormat[m].Month(), day, 0, 0, 0, 0, time.Local)
-	//return date, nil
-
-	monthFormat := map[string]string{
-		"января":   "01",
-		"февраля":  "02",
-		"марта":    "03",
-		"апреля":   "04",
-		"мая":      "05",
-		"июня":     "06",
-		"июля":     "07",
-		"августа":  "08",
-		"сентября": "09",
-		"октября":  "10",
-		"ноября":   "11",
-		"декабря":  "12",
-	}
-
-	date := y + "-" + monthFormat[m] + "-" + d
-	res, err := time.Parse("2006-01-02", date)
+	year, err := strconv.Atoi(y)
 	if err != nil {
 		return time.Time{}, err
 	}
 
-	return res, nil
+	day, err := strconv.Atoi(d)
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	month, exists := monthFormat[m]
+	if !exists {
+		return time.Time{}, fmt.Errorf("can`t search such moth format")
+	}
+
+	return time.Date(year, month, day, 0, 0, 0, 0, time.Local), nil
 }
