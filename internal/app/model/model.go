@@ -13,10 +13,10 @@ type DBNews struct {
 	/*PublishedAtDay   int      `json:"published_at_day"`   //Дата публикации
 	PublishedAtMonth string   `json:"published_at_month"` //Дата публикации
 	PublishedAtYear  int      `json:"published_at_year"`  //Дата публикации*/
-	Image           string   `json:"image"`       //Первая картинка новости
-	PhotoReport     []string `gorm:"type:text[]"` //Несколько фотографий для пролистывания
-	SimilarNewsSlug []string `gorm:"type:text[]"` //Похожие новости
-	TagsTitle       []string `gorm:"type:text[]"` //Тэги для фильтрации
+	Image string `json:"image"` //Первая картинка новости
+	//PhotoReport     []string `gorm:"type:text[]"` //Несколько фотографий для пролистывания
+	//SimilarNewsSlug []string `gorm:"type:text[]"` //Похожие новости
+	//TagsTitle       []string `gorm:"type:text[]"` //Тэги для фильтрации
 }
 
 type FullNewsItems struct {

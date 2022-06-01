@@ -102,7 +102,7 @@ func (s *Service) WriteDBNews(ctx context.Context, NewsItems model.NewsItems, Fu
 	DBItems.PublishedAt = FullNewsItems.PublishedAt
 	DBItems.Image = FullNewsItems.Image
 
-	for _, tag := range NewsItems.TagsTitle {
+	/*for _, tag := range NewsItems.TagsTitle {
 		DBItems.TagsTitle = append(DBItems.TagsTitle, tag)
 	}
 
@@ -112,7 +112,7 @@ func (s *Service) WriteDBNews(ctx context.Context, NewsItems model.NewsItems, Fu
 
 	for _, similarNewsSlug := range FullNewsItems.PhotoReport {
 		DBItems.SimilarNewsSlug = append(DBItems.SimilarNewsSlug, similarNewsSlug)
-	}
+	}*/
 
 	return s.repo.RewriteDBNews(ctx, DBItems)
 }

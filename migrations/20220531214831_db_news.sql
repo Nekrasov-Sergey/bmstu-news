@@ -11,10 +11,7 @@ create table db_news
     content            text,
     reading_time       text,
     published_at       date,
-    image              text,
-    photo_report       text[],
-    similar_news_slug  text[],
-    tags_title         text[]
+    image              text
 );
 
 
