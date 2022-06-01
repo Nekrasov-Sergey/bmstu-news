@@ -56,7 +56,10 @@ func main() {
 	if err != nil {
 		log.Errorf("Failed to migrate: %v", err)
 	}
-
+	/*
+		photo_report       text[],
+			similar_news_slug  text[],
+			tags_title         text[]*/
 	log.Info("DB migration completed")
 }
 

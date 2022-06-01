@@ -32,8 +32,8 @@ func (c *Client) WithTransport(transport *http.Transport) {
 
 func (c *Client) GetNews(limit string, offset string) (*ResponseNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
-	var urlLimit string = "?&limit="
-	var urlOffset string = "&offset="
+	var urlLimit string = "limit="
+	var urlOffset string = "offset="
 	url := url.URL{
 		Scheme:   cfg.Protocol,
 		Host:     cfg.SiteAddress,
@@ -72,10 +72,9 @@ func (c *Client) GetFullNews(slug string) (*ResponseFullNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
 
 	url := url.URL{
-		Scheme:   cfg.Protocol,
-		Host:     cfg.SiteAddress,
-		Path:     getNewsPath,
-		RawQuery: slug,
+		Scheme: cfg.Protocol,
+		Host:   cfg.SiteAddress,
+		Path:   getNewsPath + "/" + slug,
 	}
 
 	log.Info("generated url ", url.String())

@@ -47,7 +47,7 @@ func (a *App) Run(ctx context.Context) error {
 	newsCfg := config.FromContext(ctx).BMSTUNewsConfig
 
 	for {
-		NewsItems, err := a.service.ParseNews(ctx, "3", "0")
+		NewsItems, err := a.service.ParseNews(ctx, "5", "0")
 		if err != nil {
 			log.WithError(err).Error("Can`t parse news")
 		}

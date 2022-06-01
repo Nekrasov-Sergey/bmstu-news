@@ -10,13 +10,8 @@ create table db_news
     preview_text       text,
     content            text,
     reading_time       text,
-    published_at_day   int,
-    published_at_month varchar(15),
-    published_at_year  int,
-    image              text,
-    photo_report       text[],
-    similar_news_slug  text[],
-    tags_title         text[]
+    published_at       date,
+    image              text
 );
 
 
