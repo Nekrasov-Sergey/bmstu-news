@@ -69,3 +69,9 @@ func (a *App) Run(ctx context.Context) error {
 
 	return nil
 }
+
+func (a *App) FirstParse(ctx context.Context) error {
+	//реализовать парсинг всех старых новостей
+
+	return nil
+}

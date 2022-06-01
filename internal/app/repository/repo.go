@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
-
 	log "github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"reflect"
 
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/dsn"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/model"
@@ -50,15 +50,13 @@ func (r *Repository) RewriteDBNews(ctx context.Context, newsItem model.News) err
 		}
 	}
 
-	// todo: проверять идентично ли и перезаписывать только если есть различия или делать UPDATE
-	err = r.db.Where("slug = ?", newsItem.Slug).Delete(&selectedNewsItem).Error
-	if err != nil {
-		return err
-	}
-
-	err = r.db.Create(&newsItem).Error
-	if err != nil {
-		return err
+	if reflect.DeepEqual(selectedNewsItem, newsItem) {
+		log.Info("news completely equal")
+	} else {
+		err = r.db.Where("slug = ?", newsItem.Slug).Updates(&newsItem).Error //не знаю, работает или нет :/
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
