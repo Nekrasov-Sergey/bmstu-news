@@ -17,6 +17,7 @@ type IService interface {
 	JoinNewsInfo(ctx context.Context, shortNewsItem model.NewsItems, fullNewsItem model.FullNewsItem) model.News
 	WriteDBNews(ctx context.Context, news model.News) error
 	ReadDBNews(ctx context.Context, date time.Time) []model.News
+	GetTotal(ctx context.Context) int
 }
 
 type App struct {
@@ -72,6 +73,13 @@ func (a *App) Run(ctx context.Context) error {
 
 func (a *App) FirstParse(ctx context.Context) error {
 	//реализовать парсинг всех старых новостей
+	total := a.service.GetTotal(ctx)
+	log.Info(total)
+	var limit, offset int
+	for i := 0; i < total/100; i++ {
+		limit += 20
+		offset += 20
 
+	}
 	return nil
 }

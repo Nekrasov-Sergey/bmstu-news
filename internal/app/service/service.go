@@ -132,6 +132,15 @@ func (s *Service) ReadDBNews(ctx context.Context, date time.Time) []model.News {
 	return nil
 }
 
+func (s *Service) GetTotal(ctx context.Context) int {
+	resp, err := s.newsClient.GetNews(1, 0)
+	if err != nil {
+		log.WithContext(ctx).WithError(err).Error("Can`t parse full news")
+		return 0
+	}
+	return resp.Total
+}
+
 func (s *Service) tryParseTime(d string, m string, y string) (time.Time, error) {
 	year, err := strconv.Atoi(y)
 	if err != nil {
@@ -148,5 +157,5 @@ func (s *Service) tryParseTime(d string, m string, y string) (time.Time, error) 
 		return time.Time{}, fmt.Errorf("can`t search such moth format")
 	}
 
-	return time.Date(year, month, day, 0, 0, 0, 0, time.Local), nil
+	return time.Date(year, month, day, 0, 0, 0, 0, time.UTC), nil
 }
