@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -66,9 +67,14 @@ func (c *Client) GetNews(limit int, offset int) (*ResponseNews, error) {
 	}
 
 	var resp ResponseNews
+	var resp_test ResponseNews
 
 	err = json.Unmarshal(bts, &resp)
 	if err != nil {
+		return nil, err
+	}
+
+	if reflect.DeepEqual(resp.Items, resp_test.Items) {
 		return nil, err
 	}
 

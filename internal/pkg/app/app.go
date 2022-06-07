@@ -2,6 +2,8 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -75,11 +77,50 @@ func (a *App) FirstParse(ctx context.Context) error {
 	//реализовать парсинг всех старых новостей
 	total := a.service.GetTotal(ctx)
 	log.Info(total)
-	var limit, offset int
-	for i := 0; i < total/100; i++ {
-		limit += 20
-		offset += 20
+	limit := make(chan int, 1000)
+	var wg sync.WaitGroup
+	var b int
 
+	for i := 0; i < total/100; i++ {
+
+		for j := 1; j <= 5; j++ {
+			b += 20
+			limit <- b
+		}
+
+		for w := 1; w <= 1; w++ {
+			wg.Add(1)
+			go a.worker(ctx, &wg, limit)
+		}
+
+		wg.Wait()
 	}
+
+	close(limit)
 	return nil
+}
+
+func (a *App) worker(ctx context.Context, wg *sync.WaitGroup, limit <-chan int) {
+	defer wg.Done()
+	offset := <-limit - 20
+	fmt.Printf("limit - %v, offset - %v \n", offset+20, offset)
+	shortNewsItems, err := a.service.ParseShortNews(ctx, offset+20, offset)
+	if err != nil {
+		log.WithError(err).Error("can`t parse news")
+		return
+	}
+	var fullNewsItem model.FullNewsItem
+
+	for _, shortItem := range shortNewsItems {
+		fullNewsItem, err = a.service.ParseFullNews(ctx, shortItem.Slug)
+		if err != nil {
+			log.WithError(err).Error("can`t parse full news")
+
+			continue
+		}
+
+		newsItem := a.service.JoinNewsInfo(ctx, shortItem, fullNewsItem)
+
+		err = a.service.WriteDBNews(ctx, newsItem)
+	}
 }
