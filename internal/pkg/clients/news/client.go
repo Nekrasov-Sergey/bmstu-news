@@ -4,14 +4,23 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/config"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
+	"strconv"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/config"
 )
 
-const getNewsPath = "/news"
+const (
+	getNewsPath = "/news"
+
+	urlLimitKey  string = "limit="
+	urlOffsetKey string = "offset="
+)
 
 type Client struct {
 	ctx        context.Context
@@ -30,15 +39,14 @@ func (c *Client) WithTransport(transport *http.Transport) {
 	c.httpClient.Transport = transport
 }
 
-func (c *Client) GetNews(limit string, offset string) (*ResponseNews, error) {
+func (c *Client) GetNews(limit int, offset int) (*ResponseNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
-	var urlLimit string = "?&limit="
-	var urlOffset string = "&offset="
+
 	url := url.URL{
 		Scheme:   cfg.Protocol,
 		Host:     cfg.SiteAddress,
 		Path:     getNewsPath,
-		RawQuery: urlLimit + limit + urlOffset + offset, //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
+		RawQuery: urlLimitKey + strconv.Itoa(limit) + "&" + urlOffsetKey + strconv.Itoa(offset), //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
 	}
 
 	log.Info("generated url ", url.String())
@@ -59,9 +67,14 @@ func (c *Client) GetNews(limit string, offset string) (*ResponseNews, error) {
 	}
 
 	var resp ResponseNews
+	var resp_test ResponseNews
 
 	err = json.Unmarshal(bts, &resp)
 	if err != nil {
+		return nil, err
+	}
+
+	if reflect.DeepEqual(resp.Items, resp_test.Items) {
 		return nil, err
 	}
 
@@ -72,10 +85,9 @@ func (c *Client) GetFullNews(slug string) (*ResponseFullNews, error) {
 	cfg := config.FromContext(c.ctx).BMSTUNewsConfig
 
 	url := url.URL{
-		Scheme:   cfg.Protocol,
-		Host:     cfg.SiteAddress,
-		Path:     getNewsPath,
-		RawQuery: slug,
+		Scheme: cfg.Protocol,
+		Host:   cfg.SiteAddress,
+		Path:   getNewsPath + "/" + slug,
 	}
 
 	log.Info("generated url ", url.String())

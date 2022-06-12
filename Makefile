@@ -1,6 +1,6 @@
 PWD = C:\Users\hoppl\bmstu-news
 #$(shell pwd)
-NAME = bmstu-news-parser
+NAME = bmstu-news
 
 .PHONY: run
 run:

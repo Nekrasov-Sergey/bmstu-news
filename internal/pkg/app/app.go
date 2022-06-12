@@ -2,18 +2,24 @@ package app
 
 import (
 	"context"
+	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
+	"go.uber.org/atomic"
+
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/config"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/model"
 	"github.com/Nekrasov-Sergey/bmstu-news.git/internal/app/service"
-	log "github.com/sirupsen/logrus"
-	"time"
 )
 
 type IService interface {
-	ParseNews(ctx context.Context, limit string, offset string) ([]model.NewsItems, error)
-	ParseFullNews(ctx context.Context, slug string) (model.FullNewsItems, error)
-	WriteDBNews(ctx context.Context, NewsItems model.NewsItems, FullNewsItems model.FullNewsItems) error
-	ReadDBNews(ctx context.Context, date time.Time) []model.DBNews
+	ParseShortNews(ctx context.Context, limit int, offset int) ([]model.NewsItems, error)
+	ParseFullNews(ctx context.Context, slug string) (model.FullNewsItem, error)
+	JoinNewsInfo(ctx context.Context, shortNewsItem model.NewsItems, fullNewsItem model.FullNewsItem) model.News
+	WriteDBNews(ctx context.Context, news model.News) error
+	ReadDBNews(ctx context.Context, date time.Time) []model.News
+	GetTotal(ctx context.Context) int
 }
 
 type App struct {
@@ -22,14 +28,6 @@ type App struct {
 }
 
 func New(ctx context.Context) (*App, error) {
-	/*
-		db, err := gorm.Open(postgres.Open(dsn.FromEnv()), &gorm.Config{})
-		if err != nil {
-			log.WithError(err).Println("Can`t open postgres connection")
-			return err
-		}
-	*/
-
 	app := &App{
 		ctx: ctx,
 	}
@@ -47,25 +45,100 @@ func (a *App) Run(ctx context.Context) error {
 	newsCfg := config.FromContext(ctx).BMSTUNewsConfig
 
 	for {
-		NewsItems, err := a.service.ParseNews(ctx, "3", "0")
+		shortNewsItems, err := a.service.ParseShortNews(ctx, newsCfg.DayLimit, 0)
 		if err != nil {
-			log.WithError(err).Error("Can`t parse news")
+			log.WithError(err).Error("can`t parse news")
+
+			continue
 		}
 
-		var FullNewsItems model.FullNewsItems
+		var fullNewsItem model.FullNewsItem
 
-		for _, news := range NewsItems {
-			FullNewsItems, err = a.service.ParseFullNews(ctx, news.Slug)
+		for _, shortItem := range shortNewsItems {
+			fullNewsItem, err = a.service.ParseFullNews(ctx, shortItem.Slug)
 			if err != nil {
-				log.WithError(err).Error("Can`t parse full news")
+				log.WithError(err).Error("can`t parse full news")
+
+				continue
 			}
-			err = a.service.WriteDBNews(ctx, news, FullNewsItems)
+
+			newsItem := a.service.JoinNewsInfo(ctx, shortItem, fullNewsItem)
+
+			err = a.service.WriteDBNews(ctx, newsItem)
 		}
 
 		time.Sleep(newsCfg.CronTimeout)
 	}
-	/*c := news.New(ctx)
-	c.GetNews()*/
+
+	return nil
+}
+
+func (a *App) FirstParse(ctx context.Context) error {
+	//реализовать парсинг всех старых новостей
+	cfg := config.FromContext(ctx).FirstParse
+	workerCount := int(cfg.WorkerCount)
+	var failedFullParseCount atomic.Int32
+	var failedShortParseCount int
+	// get total
+	total := a.service.GetTotal(ctx)
+	shortNews := make([]model.NewsItems, total+100, total+100)
+
+	for i := 0; i < total/cfg.StepParseSlug+1; i++ {
+		offset := i * cfg.StepParseSlug
+
+		shortNewsItems, err := a.service.ParseShortNews(ctx, cfg.StepParseSlug, offset)
+		if err != nil {
+			log.WithError(err).Error("can`t parse news")
+			failedShortParseCount++
+
+			continue
+		}
+
+		index := offset
+		for _, item := range shortNewsItems {
+			shortNews[index] = item
+			index++
+		}
+	}
+
+	log.WithField("total", total).Info("successfully get total")
+
+	var wg sync.WaitGroup
+	wg.Add(workerCount)
+
+	for i := 0; i < workerCount; i++ {
+		oneWorkerNews := cap(shortNews) / workerCount
+		start := i * oneWorkerNews
+		end := (i + 1) * oneWorkerNews
+		if end > cap(shortNews) {
+			end = cap(shortNews)
+		}
+		arr := shortNews[start:end]
+
+		go func(failCounter atomic.Int32, shortNews []model.NewsItems) {
+			for _, shNews := range shortNews {
+				fullNewsItem, err := a.service.ParseFullNews(ctx, shNews.Slug)
+				if err != nil {
+					log.WithError(err).Error("can`t parse full news")
+
+					failCounter.Add(1)
+					continue
+				}
+
+				newsItem := a.service.JoinNewsInfo(ctx, shNews, fullNewsItem)
+
+				err = a.service.WriteDBNews(ctx, newsItem)
+
+				time.Sleep(1 * time.Second)
+			}
+			wg.Done()
+		}(failedFullParseCount, arr)
+	}
+
+	wg.Wait()
+	log.WithField("full_parse_count", failedShortParseCount).
+		WithField("full_parse_count", failedFullParseCount.Load()).
+		Info("count of failed parse")
 
 	return nil
 }

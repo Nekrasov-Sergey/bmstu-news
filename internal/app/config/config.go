@@ -17,12 +17,19 @@ type Config struct {
 	ServicePort int
 
 	BMSTUNewsConfig BMSTUNewsConfig
+	FirstParse      FirstParse
 }
 
 type BMSTUNewsConfig struct {
 	SiteAddress string
 	Protocol    string
 	CronTimeout time.Duration
+	DayLimit    int
+}
+
+type FirstParse struct {
+	WorkerCount   uint
+	StepParseSlug int
 }
 
 // NewConfig Создаёт новый объект конфигурации, загружая данные из файла конфигурации
