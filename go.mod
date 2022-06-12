@@ -9,6 +9,7 @@ require (
 	github.com/pressly/goose v2.7.0+incompatible
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/viper v1.12.0
+	go.uber.org/atomic v1.7.0
 	gorm.io/driver/postgres v1.3.7
 	gorm.io/gorm v1.23.5
 )

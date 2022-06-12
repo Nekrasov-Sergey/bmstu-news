@@ -1,4 +1,5 @@
-#Продакшн конфиг
+#Локальный конфиг
+
 #Хост и порт приложения
 
 ServiceHost = "0.0.0.0"
@@ -7,3 +8,10 @@ ServicePort = 80
 [BMSTUNewsConfig]
 SiteAddress = "api.www.bmstu.ru"
 Protocol = "https"
+CronTimeout = "15s"
+DayLimit = 30
+
+[FirstParse]
+WorkerCount = 10
+StepParseSlug = 200
+

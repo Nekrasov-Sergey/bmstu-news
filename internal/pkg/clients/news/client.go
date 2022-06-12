@@ -46,7 +46,7 @@ func (c *Client) GetNews(limit int, offset int) (*ResponseNews, error) {
 		Scheme:   cfg.Protocol,
 		Host:     cfg.SiteAddress,
 		Path:     getNewsPath,
-		RawQuery: urlLimitKey + strconv.Itoa(limit) + urlOffsetKey + strconv.Itoa(offset), //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
+		RawQuery: urlLimitKey + strconv.Itoa(limit) + "&" + urlOffsetKey + strconv.Itoa(offset), //Добавлять ли сюда ?&limit=200&offset=0 в качестве дополнительного параметра?
 	}
 
 	log.Info("generated url ", url.String())

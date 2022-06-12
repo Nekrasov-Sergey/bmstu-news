@@ -41,6 +41,7 @@ func (r *Repository) RewriteDBNews(ctx context.Context, newsItem model.News) err
 	err = r.db.
 		Where("slug = ?", newsItem.Slug).
 		First(&selectedNewsItem).
+		Limit(1).
 		Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
